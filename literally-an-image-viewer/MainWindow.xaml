@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:literally_an_image_viewer"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525"
         WindowStyle="None"
@@ -14,6 +15,7 @@
     </Window.Background>
     
     <Grid>
-        <Image x:Name="ImageControl"/>
+        <Image x:Name="ImageControl"
+               RenderOptions.BitmapScalingMode="NearestNeighbor"/>
     </Grid>
 </Window>

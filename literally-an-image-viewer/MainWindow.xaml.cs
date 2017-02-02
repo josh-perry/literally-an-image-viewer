@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using System.Windows.Forms;
+using WpfAnimatedGif;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using OpenFileDialog = System.Windows.Forms.OpenFileDialog;
 
@@ -54,6 +53,17 @@ namespace literally_an_image_viewer
         /// <param name="source"></param>
         private void LoadImage(Uri source)
         {
+            if (source.ToString().EndsWith(".gif"))
+            {
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.UriSource = source;
+                image.EndInit();
+                ImageBehavior.SetAnimatedSource(ImageControl, image);
+
+                return;
+            }
+
             ImageControl.Source = new BitmapImage(source);
         }
 
