@@ -6,16 +6,18 @@
         xmlns:local="clr-namespace:literally_an_image_viewer"
         xmlns:gif="http://wpfanimatedgif.codeplex.com"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525"
+        Title="MainWindow"
+        Height="1"
+        Width="1"
         WindowStyle="None"
         AllowsTransparency="True"
-        ResizeMode="CanResizeWithGrip">
+        ResizeMode="CanResizeWithGrip"
+        SizeToContent="Manual">
     <Window.Background>
-        <SolidColorBrush Opacity="0.1"/>
+        <SolidColorBrush Color="Black" Opacity="0.95"/>
     </Window.Background>
-    
-    <Grid>
-        <Image x:Name="ImageControl"
-               RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-    </Grid>
+
+    <Image x:Name="ImageControl"
+            RenderOptions.BitmapScalingMode="NearestNeighbor">
+    </Image>
 </Window>

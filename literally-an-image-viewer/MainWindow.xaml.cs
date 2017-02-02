@@ -13,6 +13,9 @@ namespace literally_an_image_viewer
     /// </summary>
     public partial class MainWindow : Window
     {
+        private double aspectRatio = 0.0;
+        private bool animatedGif = false;
+
         /// <summary>
         /// Window constructor.
         /// </summary>
@@ -23,11 +26,13 @@ namespace literally_an_image_viewer
             SetEventHandlers();
 
             var args = Environment.GetCommandLineArgs();
-
+            
+            // If there's a file in the argument list, load that
             if (args.Length > 1)
             {
                 LoadImage(args[1]);
             }
+            // Otherwise, open a file open dialog
             else
             {
                 LoadImageFromDialog();
@@ -45,6 +50,10 @@ namespace literally_an_image_viewer
             {
                 LoadImage(dialog.FileName);
             }
+            else
+            {
+                Environment.Exit(0);
+            }
         }
 
         /// <summary>
@@ -59,12 +68,35 @@ namespace literally_an_image_viewer
                 image.BeginInit();
                 image.UriSource = source;
                 image.EndInit();
+
                 ImageBehavior.SetAnimatedSource(ImageControl, image);
+                animatedGif = true;
 
                 return;
             }
 
             ImageControl.Source = new BitmapImage(source);
+            animatedGif = false;
+        }
+
+        private void ImageControlOnLoaded(object sender, RoutedEventArgs routedEventArgs)
+        {
+            if (!animatedGif)
+            {
+                Width = ImageControl.Source.Width;
+                Height = ImageControl.Source.Height;
+                MinWidth = ImageControl.Source.Width;
+                MinHeight = ImageControl.Source.Height;
+            }
+            else
+            {
+                var gif = ImageBehavior.GetAnimatedSource(ImageControl);
+
+                Width = gif.Width;
+                Height = gif.Height;
+                MinWidth = gif.Width;
+                MinHeight = gif.Height;
+            }
         }
 
         /// <summary>
@@ -83,6 +115,13 @@ namespace literally_an_image_viewer
         {
             KeyDown += OnKeyDown;
             MouseDown += OnMouseDown;
+            MouseDoubleClick += OnMouseDoubleClick;
+            ImageControl.Loaded += ImageControlOnLoaded;
+        }
+
+        private void OnMouseDoubleClick(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         }
 
         /// <summary>
@@ -113,6 +152,33 @@ namespace literally_an_image_viewer
             if (e.Key == Key.Escape)
             {
                 Environment.Exit(0);
+            }
+        }
+
+        /// <summary>
+        /// Event handler for window size change.
+        /// Locks the window to the same aspect ratio as the loaded image.
+        /// </summary>
+        /// <param name="sizeInfo"></param>
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        {
+            // If an image has not been loaded yet, just return
+            if (ImageControl.Source == null)
+            {
+                return;
+            }
+
+            // Figure out what aspect ratio we're supposed to be locking to based on the loaded image
+            aspectRatio = ImageControl.Source.Width / ImageControl.Source.Height;
+
+            // Lock window size
+            if (sizeInfo.WidthChanged)
+            {
+                Width = sizeInfo.NewSize.Height * aspectRatio;
+            }
+            else
+            {
+                Height = sizeInfo.NewSize.Width * aspectRatio;
             }
         }
     }
