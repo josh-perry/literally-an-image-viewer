@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using WpfAnimatedGif;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using OpenFileDialog = System.Windows.Forms.OpenFileDialog;
 
 namespace literally_an_image_viewer
 {
@@ -13,8 +13,8 @@ namespace literally_an_image_viewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private double aspectRatio = 0.0;
-        private bool animatedGif = false;
+        private double _aspectRatio;
+        private bool _animatedGif;
 
         /// <summary>
         /// Window constructor.
@@ -62,6 +62,8 @@ namespace literally_an_image_viewer
         /// <param name="source"></param>
         private void LoadImage(Uri source)
         {
+            ImageBehavior.SetAnimatedSource(ImageControl, null);
+
             if (source.ToString().EndsWith(".gif"))
             {
                 var image = new BitmapImage();
@@ -70,18 +72,32 @@ namespace literally_an_image_viewer
                 image.EndInit();
 
                 ImageBehavior.SetAnimatedSource(ImageControl, image);
-                animatedGif = true;
+                _animatedGif = true;
+
+                LockWindowSizes();
 
                 return;
             }
 
             ImageControl.Source = new BitmapImage(source);
-            animatedGif = false;
+            _animatedGif = false;
+
+            LockWindowSizes();
         }
 
+        /// <summary>
+        /// Event handler for when an image is loaded.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="routedEventArgs"></param>
         private void ImageControlOnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
-            if (!animatedGif)
+            LockWindowSizes();
+        }
+
+        private void LockWindowSizes()
+        {
+            if (!_animatedGif)
             {
                 Width = ImageControl.Source.Width;
                 Height = ImageControl.Source.Height;
@@ -97,6 +113,11 @@ namespace literally_an_image_viewer
                 MinWidth = gif.Width;
                 MinHeight = gif.Height;
             }
+
+            ImageControl.MaxHeight = SystemParameters.PrimaryScreenHeight;
+            ImageControl.MaxWidth = SystemParameters.PrimaryScreenWidth;
+            MaxHeight = ImageControl.MaxHeight;
+            MaxWidth = ImageControl.MaxWidth;
         }
 
         /// <summary>
@@ -105,7 +126,7 @@ namespace literally_an_image_viewer
         /// <param name="source"></param>
         private void LoadImage(string source)
         {
-            LoadImage(new Uri(source));
+            LoadImage(new Uri(source, UriKind.RelativeOrAbsolute));
         }
 
         /// <summary>
@@ -122,6 +143,33 @@ namespace literally_an_image_viewer
         private void OnMouseDoubleClick(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
             WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+            var screenWidth = SystemParameters.PrimaryScreenWidth;
+            var screenHeight = SystemParameters.PrimaryScreenHeight;
+
+            if (WindowState == WindowState.Maximized)
+            {
+                // https://gist.github.com/Konard/7233618
+                ResizeMode = ResizeMode.NoResize;
+                WindowState = WindowState.Normal;
+                WindowStyle = WindowStyle.None;
+
+                Width = screenWidth;
+                Height = screenHeight;
+                Top = Screen.PrimaryScreen.Bounds.Top;
+                Left = Screen.PrimaryScreen.Bounds.Left;
+
+                WindowState = WindowState.Maximized;
+            }
+            else
+            {
+                var windowWidth = Width;
+                var windowHeight = Height;
+                Left = (screenWidth / 2) - (windowWidth / 2);
+                Top = (screenHeight / 2) - (windowHeight / 2);
+
+                ResizeMode = ResizeMode.CanResizeWithGrip;
+            }
         }
 
         /// <summary>
@@ -169,17 +217,24 @@ namespace literally_an_image_viewer
             }
 
             // Figure out what aspect ratio we're supposed to be locking to based on the loaded image
-            aspectRatio = ImageControl.Source.Width / ImageControl.Source.Height;
+            _aspectRatio = ImageControl.Source.Width / ImageControl.Source.Height;
 
             // Lock window size
             if (sizeInfo.WidthChanged)
             {
-                Width = sizeInfo.NewSize.Height * aspectRatio;
+                Width = sizeInfo.NewSize.Height * _aspectRatio;
             }
             else
             {
-                Height = sizeInfo.NewSize.Width * aspectRatio;
+                Height = sizeInfo.NewSize.Width * _aspectRatio;
             }
         }
+
+        #region Commands
+        private void OpenCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            LoadImageFromDialog();
+        }
+        #endregion
     }
 }

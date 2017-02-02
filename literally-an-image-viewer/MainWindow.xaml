@@ -12,10 +12,20 @@
         WindowStyle="None"
         AllowsTransparency="True"
         ResizeMode="CanResizeWithGrip"
-        SizeToContent="Manual">
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterScreen">
     <Window.Background>
         <SolidColorBrush Color="Black" Opacity="0.95"/>
     </Window.Background>
+    
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Open"
+                        Executed="OpenCommand_Executed"/>
+    </Window.CommandBindings>
+    
+    <Window.InputBindings>
+        <KeyBinding Key="O" Command="ApplicationCommands.Open"/>
+    </Window.InputBindings>
 
     <Image x:Name="ImageControl"
             RenderOptions.BitmapScalingMode="NearestNeighbor">
