@@ -28,6 +28,6 @@
     </Window.InputBindings>
 
     <Image x:Name="ImageControl"
-            RenderOptions.BitmapScalingMode="NearestNeighbor">
+           RenderOptions.BitmapScalingMode="NearestNeighbor">
     </Image>
 </Window>

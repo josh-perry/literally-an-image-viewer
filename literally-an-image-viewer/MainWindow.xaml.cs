@@ -11,9 +11,11 @@ namespace literally_an_image_viewer
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
-        private double _aspectRatio;
+        public bool LockedToAspectRatio { get; set; }
+        
+        private double AspectRatio => ImageControl.Source.Width / ImageControl.Source.Height;
         private bool _animatedGif;
 
         /// <summary>
@@ -74,15 +76,11 @@ namespace literally_an_image_viewer
                 ImageBehavior.SetAnimatedSource(ImageControl, image);
                 _animatedGif = true;
 
-                LockWindowSizes();
-
                 return;
             }
 
             ImageControl.Source = new BitmapImage(source);
             _animatedGif = false;
-
-            LockWindowSizes();
         }
 
         /// <summary>
@@ -92,32 +90,48 @@ namespace literally_an_image_viewer
         /// <param name="routedEventArgs"></param>
         private void ImageControlOnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
+            ReinitializeWindow();
+            CenterWindow();
             LockWindowSizes();
         }
 
+        /// <summary>
+        /// Set up width/height of window.
+        /// </summary>
+        private void ReinitializeWindow()
+        {
+            Width = 300;
+            Height = 300;
+
+            LockHeightToAspectRatio(Width);
+        }
+
+        /// <summary>
+        /// Set up max widths and heights.
+        /// </summary>
         private void LockWindowSizes()
         {
-            if (!_animatedGif)
-            {
-                Width = ImageControl.Source.Width;
-                Height = ImageControl.Source.Height;
-                MinWidth = ImageControl.Source.Width;
-                MinHeight = ImageControl.Source.Height;
-            }
-            else
-            {
-                var gif = ImageBehavior.GetAnimatedSource(ImageControl);
-
-                Width = gif.Width;
-                Height = gif.Height;
-                MinWidth = gif.Width;
-                MinHeight = gif.Height;
-            }
-
             ImageControl.MaxHeight = SystemParameters.PrimaryScreenHeight;
             ImageControl.MaxWidth = SystemParameters.PrimaryScreenWidth;
             MaxHeight = ImageControl.MaxHeight;
             MaxWidth = ImageControl.MaxWidth;
+            MinWidth = 32;
+            MinHeight = 32;
+        }
+
+        /// <summary>
+        /// Center this window on the primary display.
+        /// </summary>
+        private void CenterWindow()
+        {
+            // TODO: Change this to work better with multiple screens
+            var screenWidth = SystemParameters.PrimaryScreenWidth;
+            var screenHeight = SystemParameters.PrimaryScreenHeight;
+            var windowWidth = Width;
+            var windowHeight = Height;
+
+            Left = (screenWidth / 2) - (windowWidth / 2);
+            Top = (screenHeight / 2) - (windowHeight / 2);
         }
 
         /// <summary>
@@ -140,35 +154,27 @@ namespace literally_an_image_viewer
             ImageControl.Loaded += ImageControlOnLoaded;
         }
 
+        /// <summary>
+        /// Double click event handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="mouseButtonEventArgs"></param>
         private void OnMouseDoubleClick(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
+            // Toggle maximised state
             WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-
-            var screenWidth = SystemParameters.PrimaryScreenWidth;
-            var screenHeight = SystemParameters.PrimaryScreenHeight;
 
             if (WindowState == WindowState.Maximized)
             {
-                // https://gist.github.com/Konard/7233618
                 ResizeMode = ResizeMode.NoResize;
+
                 WindowState = WindowState.Normal;
-                WindowStyle = WindowStyle.None;
-
-                Width = screenWidth;
-                Height = screenHeight;
-                Top = Screen.PrimaryScreen.Bounds.Top;
-                Left = Screen.PrimaryScreen.Bounds.Left;
-
                 WindowState = WindowState.Maximized;
             }
             else
             {
-                var windowWidth = Width;
-                var windowHeight = Height;
-                Left = (screenWidth / 2) - (windowWidth / 2);
-                Top = (screenHeight / 2) - (windowHeight / 2);
-
                 ResizeMode = ResizeMode.CanResizeWithGrip;
+                WindowState = WindowState.Normal;
             }
         }
 
@@ -216,18 +222,39 @@ namespace literally_an_image_viewer
                 return;
             }
 
-            // Figure out what aspect ratio we're supposed to be locking to based on the loaded image
-            _aspectRatio = ImageControl.Source.Width / ImageControl.Source.Height;
+            // TODO: Fix aspect ratio locking
+            if (!LockedToAspectRatio)
+            {
+                return;
+            }
 
             // Lock window size
             if (sizeInfo.WidthChanged)
             {
-                Width = sizeInfo.NewSize.Height * _aspectRatio;
+                LockWidthToAspectRatio(sizeInfo.NewSize.Height);
             }
             else
             {
-                Height = sizeInfo.NewSize.Width * _aspectRatio;
+                LockHeightToAspectRatio(sizeInfo.NewSize.Width);
             }
+        }
+        
+        /// <summary>
+        /// Sets width in accordance with the aspect ratio: based on height.
+        /// </summary>
+        /// <param name="height">Height to base calculation on</param>
+        private void LockWidthToAspectRatio(double height)
+        {
+            Width = height * AspectRatio;
+        }
+
+        /// <summary>
+        /// Sets height in accordance with the aspect ratio: based on width.
+        /// </summary>
+        /// <param name="width">Width to base calculation on</param>
+        private void LockHeightToAspectRatio(double width)
+        {
+            Height = width*(Height/Width);
         }
 
         #region Commands
