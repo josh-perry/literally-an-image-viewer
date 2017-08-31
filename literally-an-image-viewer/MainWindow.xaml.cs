@@ -13,10 +13,15 @@ namespace literally_an_image_viewer
     /// </summary>
     public partial class MainWindow
     {
-        public bool LockedToAspectRatio { get; set; }
+        /// <summary>
+        /// Should the window size be locked to the aspect ratio of the image source?
+        /// </summary>
+        public bool LockedToAspectRatio => true;
         
+        /// <summary>
+        /// Ratio used for calculating width/height of window.
+        /// </summary>
         private double AspectRatio => ImageControl.Source.Width / ImageControl.Source.Height;
-        private bool _animatedGif;
 
         /// <summary>
         /// Window constructor.
@@ -74,25 +79,18 @@ namespace literally_an_image_viewer
                 image.EndInit();
 
                 ImageBehavior.SetAnimatedSource(ImageControl, image);
-                _animatedGif = true;
 
                 return;
             }
 
             ImageControl.Source = new BitmapImage(source);
-            _animatedGif = false;
-        }
 
-        /// <summary>
-        /// Event handler for when an image is loaded.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="routedEventArgs"></param>
-        private void ImageControlOnLoaded(object sender, RoutedEventArgs routedEventArgs)
-        {
             ReinitializeWindow();
             CenterWindow();
             LockWindowSizes();
+
+            Activate();
+            Focus();
         }
 
         /// <summary>
@@ -150,7 +148,6 @@ namespace literally_an_image_viewer
             KeyDown += OnKeyDown;
             MouseDown += OnMouseDown;
             MouseDoubleClick += OnMouseDoubleClick;
-            ImageControl.Loaded += ImageControlOnLoaded;
         }
 
         /// <summary>
@@ -221,7 +218,7 @@ namespace literally_an_image_viewer
                 return;
             }
 
-            // TODO: Fix aspect ratio locking
+            // If we don't care about locking the window to the image aspect ratio; return
             if (!LockedToAspectRatio)
             {
                 return;
