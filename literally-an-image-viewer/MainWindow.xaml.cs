@@ -100,8 +100,7 @@ namespace literally_an_image_viewer
         /// </summary>
         private void ReinitializeWindow()
         {
-            Width = 300;
-            Height = 300;
+            Width = SystemParameters.PrimaryScreenWidth / 3;
 
             LockHeightToAspectRatio(Width);
         }
@@ -254,7 +253,7 @@ namespace literally_an_image_viewer
         /// <param name="width">Width to base calculation on</param>
         private void LockHeightToAspectRatio(double width)
         {
-            Height = width*(Height/Width);
+            Height = width / AspectRatio;
         }
 
         #region Commands
